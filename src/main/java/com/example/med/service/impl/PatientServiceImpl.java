@@ -8,6 +8,8 @@ import com.example.med.model.Patient;
 import com.example.med.repository.DoctorRepository;
 import com.example.med.repository.PatientRepository;
 import com.example.med.exception.ResourceNotFoundException;
+import com.example.med.helper.PatientHelper;
+import com.example.med.helper.DoctorHelper;
 import java.util.List;
 
 @Service
@@ -24,6 +26,9 @@ public class PatientServiceImpl implements PatientService{
 
 	@Override
 	public Patient savePatient(Patient patient) {
+		if(!PatientHelper.isValidSymptom(patient.getSymptom())) {
+			throw new ResourceNotFoundException("Symptoms are not valid.", "symtoms", patient.getSymptom());
+		}
 		return this.patientRepository.save(patient);
 	}
 
@@ -39,25 +44,17 @@ public class PatientServiceImpl implements PatientService{
 		Patient patient = this.patientRepository.findById(patientId).orElseThrow(() -> 
 				new ResourceNotFoundException("Patient", "Id", patientId));
 		String patientCity = patient.getCity();
-		if(doctorsNotPresentInCity(patientCity)) {
-			throw new ResourceNotFoundException("We are expanding service", "Id", patientId);
+		if(!DoctorHelper.isValidCity(patientCity)) {
+			throw new ResourceNotFoundException("We are still waiting to expand to your location", "Id", patientId);
 		}
-		String patientSymptom = patient.getSymptom();
+		String specialityRequired = PatientHelper.getSpecialityRequired(patient.getSymptom());
+		
 		List<Doctor> doctors = this.doctorRepository.findAllByCity(patientCity);
 		for(Doctor doctor: doctors) {
-			if(SymptomIsMatched(doctor.getSpeciality(), patientSymptom)) {
+			if(doctor.getSpeciality().equals(specialityRequired)) {
 				return doctor;
 			}
 		}
-		throw new ResourceNotFoundException("Doctors are not avaiable for this symptom", "Id", patientId);
-	}
-	
-	private boolean SymptomIsMatched(String doctorSpeciality, String patientSymptom) {
-		// check by using predefined hash-map etc. 
-		return doctorSpeciality == patientSymptom;
-	}
-	private boolean doctorsNotPresentInCity(String patientCity) {
-		// check using hash-set etc.
-		return false;
+		throw new ResourceNotFoundException("There isn’t any doctor present at your location for your symptom", "Id", patientId);
 	}
 }

@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 
 import com.example.med.model.Patient;
+import com.example.med.exception.ResourceNotFoundException;
 import com.example.med.model.Doctor;
 import com.example.med.service.PatientService;
 
@@ -27,19 +29,35 @@ public class PatientController {
 	}
 	
 	@PostMapping("/add")
-	public ResponseEntity<Patient> savePatient(@RequestBody Patient patient) {
-		return new ResponseEntity<Patient>(patientService.savePatient(patient), HttpStatus.CREATED);
+	public ResponseEntity<Object> savePatient(@RequestBody Patient patient) {
+		try {
+			return new ResponseEntity<Object>(patientService.savePatient(patient), HttpStatus.CREATED);
+		}
+		catch (ResourceNotFoundException exe){
+			return new ResponseEntity<Object>(exe.getMessage(), HttpStatus.BAD_REQUEST);  
+		}
 	}
 	
 	
-	@GetMapping("/delete/{id}")
+	@DeleteMapping("/delete/{id}")
 	public ResponseEntity<String> deletePatient(@PathVariable("id") Long patientId) {
-		patientService.removePatient(patientId);
-		return new ResponseEntity<String>("Succesfully Patient data got deleted", HttpStatus.OK);
+		try {
+			patientService.removePatient(patientId);
+			return new ResponseEntity<String>("Succesfully Patient data got deleted", HttpStatus.OK);
+		}
+		catch (ResourceNotFoundException exe){
+			return new ResponseEntity<String>(exe.getMessage(), HttpStatus.BAD_REQUEST);  
+		}
 	}
 
 	@GetMapping("/getSuggestedDoctor/{id}")
-	public ResponseEntity<Doctor> getSuggestedDoctor(@PathVariable("id") Long patientId) {
-		return new ResponseEntity<Doctor>(patientService.suggestDoctor(patientId), HttpStatus.OK);
+	public ResponseEntity<Object> getSuggestedDoctor(@PathVariable("id") Long patientId) {
+		try {
+			return new ResponseEntity<Object>(patientService.suggestDoctor(patientId), HttpStatus.OK);
+		}
+		catch (ResourceNotFoundException exe){
+			return new ResponseEntity<Object>(exe.getMessage(), HttpStatus.BAD_REQUEST);  
+		}
+
 	}
 }

@@ -5,6 +5,7 @@ import com.example.med.model.Doctor;
 import com.example.med.service.DoctorService;
 import com.example.med.repository.DoctorRepository;
 import com.example.med.exception.ResourceNotFoundException;
+import com.example.med.helper.DoctorHelper;
 
 @Service
 public class DoctorServiceImpl implements DoctorService {
@@ -19,6 +20,12 @@ public class DoctorServiceImpl implements DoctorService {
 	
 	@Override
 	public Doctor saveDoctor(Doctor doctor) {
+		if(!DoctorHelper.isValidCity(doctor.getCity()) ) {
+			throw new ResourceNotFoundException("Doctor's city is not valid", "city", doctor.getCity());
+		}
+		if(!DoctorHelper.isValidSpeciality(doctor.getSpeciality()) ) {
+			throw new ResourceNotFoundException("Doctor's speciality is not valid", "Speciality", doctor.getSpeciality());
+		}
 		return this.doctorRepository.save(doctor);
 	}
 
